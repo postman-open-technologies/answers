@@ -1,36 +1,84 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
-
-# Controls when the workflow will run
-on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+name: Answers  
+on: [push]
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  deploy_source:
+    name: Deploy API Using Lambda
+    strategy:
+      matrix:
+        node-version: [12.x]
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+    
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install and build
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          npm ci
+          npm run build --if-present
+        env:
+          CI: true
+          
+      # Answers
+      - name: /answers get lambda deploy zip
+        uses: postman-open-technologies/videos@main
+        with:
+            args: zip -qq -r m-s-answers-g.zip answers/get/index.js node_modules
+      - name: videos get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-answers-g
+            zip_file: m-s-answers-g.zip
+      - name: /answers post lambda deploy zip
+        uses: postman-open-technologies/videos@main
+        with:
+            args: zip -qq -r m-s-answers-po.zip answers/post/index.js node_modules
+      - name: videos get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-answers-po
+            zip_file: m-s-answers-po.zip
+      - name: /answers/{answer_id} get lambda deploy zip
+        uses: postman-open-technologies/videos@main
+        with:
+            args: zip -qq -r m-s-answers-answer-g.zip answers/answer_id/get/index.js node_modules
+      - name: videos get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-answers-answer-g
+            zip_file: m-s-answers-answer-g.zip
+      - name: /answers/{answer_id} put lambda deploy zip
+        uses: postman-open-technologies/videos@main
+        with:
+            args: zip -qq -r m-s-answers-answer-pu.zip answers/answer_id/put/index.js node_modules
+      - name: videos get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-answers-answer-pu
+            zip_file: m-s-answers-answer-pu.zip
+      - name: /answers/{answer_id} delete lambda deploy zip
+        uses: postman-open-technologies/videos@main
+        with:
+            args: zip -qq -r m-s-answers-answer-d.zip answers/answer_id/delete/index.js node_modules
+      - name: videos get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-answers-answer-d
+            zip_file: m-s-answers-answer-d.zip     
